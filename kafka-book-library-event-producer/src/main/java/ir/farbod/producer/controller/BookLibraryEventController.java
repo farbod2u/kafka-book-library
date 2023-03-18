@@ -13,10 +13,12 @@ import org.springframework.web.bind.annotation.RestController;
 @RequestMapping("/v1/book-lib-event")
 public class BookLibraryEventController {
 
-    @PostMapping
-    public ResponseEntity<BookLibraryEvent> save(@RequestBody Book entity){
+    @PostMapping("/async")
+    public ResponseEntity<BookLibraryEvent> save_async(@RequestBody Book entity){
+
+        var res = new BookLibraryEvent(null, entity);
 
         return  ResponseEntity.status(HttpStatus.CREATED)
-                .body(null);
+                .body(res);
     }
 }
