@@ -3,6 +3,7 @@ package ir.farbod.producer.service;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import ir.farbod.producer.entity.BookLibraryEvent;
+import ir.farbod.producer.exception.RequestException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.kafka.clients.producer.ProducerRecord;
@@ -36,12 +37,11 @@ public class BookLibraryEventProducerService {
                 });
     }
 
-    public SendResult<Integer, String> sendBookEvent_Sync(BookLibraryEvent event) throws JsonProcessingException {
-        var key = event.getEventId();
-        var value = objectMapper.writeValueAsString(event.getBook());
-
+    public SendResult<Integer, String> sendBookEvent_Sync(BookLibraryEvent event) {
         SendResult<Integer, String> result = null;
         try {
+            var key = event.getEventId();
+            var value = objectMapper.writeValueAsString(event.getBook());
 
 //            result = kafkaTemplate.sendDefault(key, value).get(1, TimeUnit.SECONDS);
 //            or
