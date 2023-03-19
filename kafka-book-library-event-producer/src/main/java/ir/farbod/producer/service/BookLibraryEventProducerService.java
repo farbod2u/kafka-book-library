@@ -5,6 +5,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import ir.farbod.producer.entity.BookLibraryEvent;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.kafka.clients.producer.ProducerRecord;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.kafka.support.SendResult;
 import org.springframework.stereotype.Service;
@@ -19,6 +20,8 @@ public class BookLibraryEventProducerService {
 
     private final KafkaTemplate<Integer, String> kafkaTemplate;
     private final ObjectMapper objectMapper;
+
+    private final String TOPIC = "book-lib-event";
 
     public void sendBookEvent_Async(BookLibraryEvent event) throws JsonProcessingException {
         var key = event.getEventId();
@@ -39,12 +42,24 @@ public class BookLibraryEventProducerService {
 
         SendResult<Integer, String> result = null;
         try {
-            result = kafkaTemplate.sendDefault(key, value).get(1, TimeUnit.SECONDS);
+
+//            result = kafkaTemplate.sendDefault(key, value).get(1, TimeUnit.SECONDS);
+//            or
+
+//            result = kafkaTemplate.send(TOPIC, key, value).get();
+//            or
+
+            result = kafkaTemplate.send(buildProducerRecord(TOPIC, key, value)).get();
+
         } catch (Exception e) {
             handleException(e);
         } finally {
             return result;
         }
+    }
+
+    private ProducerRecord<Integer, String> buildProducerRecord(String topic, Integer key, String value) {
+        return new ProducerRecord<>(topic, null, key, value, null);
     }
 
     private void handleException(Throwable throwable) {
