@@ -7,10 +7,13 @@ import ir.farbod.producer.exception.RequestException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.kafka.clients.producer.ProducerRecord;
+import org.apache.kafka.common.header.Header;
+import org.apache.kafka.common.header.internals.RecordHeader;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.kafka.support.SendResult;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 
@@ -59,7 +62,8 @@ public class BookLibraryEventProducerService {
     }
 
     private ProducerRecord<Integer, String> buildProducerRecord(String topic, Integer key, String value) {
-        return new ProducerRecord<>(topic, null, key, value, null);
+        List<Header> headers = List.of(new RecordHeader("event-source", "scanner".getBytes()));
+        return new ProducerRecord<>(topic, null, key, value, headers);
     }
 
     private void handleException(Throwable throwable) {
