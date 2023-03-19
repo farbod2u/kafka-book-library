@@ -24,7 +24,7 @@ public class ExceptionHandler extends ResponseEntityExceptionHandler {
     public ResponseEntity<Object> handleRequestException(RuntimeException ex) {
         HttpStatus status = HttpStatus.NOT_ACCEPTABLE;
         ExceptionModel exception = new ExceptionModel(ex.getMessage(), LocalDateTime.now(), status);
-        log.error("**** Exception ::> {}", ex);
+        log.error("**** Exception ::> ", ex);
 
         return ResponseEntity.status(status)
                 .body(exception);
@@ -32,14 +32,14 @@ public class ExceptionHandler extends ResponseEntityExceptionHandler {
 
     @Override
     protected ResponseEntity<Object> handleHttpRequestMethodNotSupported(HttpRequestMethodNotSupportedException ex, HttpHeaders headers, HttpStatusCode status, WebRequest request) {
-        log.error("**** Exception ::> {}", ex);
+        log.error("**** Exception ::> ", ex);
         return ResponseEntity.status(HttpStatus.METHOD_NOT_ALLOWED)
                 .body(new ExceptionModel(ex.getMessage(), LocalDateTime.now(), HttpStatus.METHOD_NOT_ALLOWED));
     }
 
     @Override
     protected ResponseEntity<Object> handleNoHandlerFoundException(NoHandlerFoundException ex, HttpHeaders headers, HttpStatusCode status, WebRequest request) {
-        log.error("**** Exception ::> {}", ex);
+        log.error("**** Exception ::> ", ex);
         HttpStatus stat = HttpStatus.INTERNAL_SERVER_ERROR;
         ExceptionModel exception = new ExceptionModel(ex.getMessage(), LocalDateTime.now(), stat);
         return ResponseEntity.status(stat)
