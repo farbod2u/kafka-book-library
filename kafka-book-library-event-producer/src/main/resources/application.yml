@@ -1,10 +1,12 @@
-#spring:
-#  profiles:
-#    active: dev
+spring:
+  profiles:
+    active: dev
 
 ---
 spring:
-#  profiles: dev
+  config:
+    activate:
+      on-profile: dev
   kafka:
     template:
       default-topic: book-lib-event
@@ -15,13 +17,13 @@ spring:
     admin:
       properties:
         bootstrap.servers: localhost:9092, localhost:9093, localhost:9094
-
 ---
-#spring:
-#  profiles: prod
-#  kafka:
-#    producer:
-#      bootstrap-servers: prod:9092
-#      key-serializer: org.apache.kafka.common.serialization.IntegerSerializer
-#      value-serializer: org.apache.kafka.common.serialization.StringSerializer
----
+spring:
+  config:
+    activate:
+      on-profile: prod
+  kafka:
+    producer:
+      bootstrap-servers: prod:9092
+      key-serializer: org.apache.kafka.common.serialization.IntegerSerializer
+      value-serializer: org.apache.kafka.common.serialization.StringSerializer
