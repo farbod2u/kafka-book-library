@@ -27,7 +27,7 @@ public class BookLibraryEventController {
     @PostMapping("/async")
     public ResponseEntity<BookLibraryEvent> save_async(@RequestBody Book entity) throws JsonProcessingException {
 
-        var event = new BookLibraryEvent(1, entity);
+        var event = new BookLibraryEvent(null, entity);
         log.info("before send");
         bookLibraryEventProducerService.sendBookEvent_Async(event);
         log.info("after sent");
@@ -38,7 +38,7 @@ public class BookLibraryEventController {
     @PostMapping("/sync")
     public ResponseEntity<BookLibraryEvent> save_sync(@RequestBody Book entity) throws JsonProcessingException, ExecutionException, InterruptedException {
 
-        var event = new BookLibraryEvent(1, entity);
+        var event = new BookLibraryEvent(null, entity);
         log.info("before send");
         SendResult<Integer, String> result = bookLibraryEventProducerService.sendBookEvent_Sync(event);
         log.info("after sent ==> {}", result.toString());
