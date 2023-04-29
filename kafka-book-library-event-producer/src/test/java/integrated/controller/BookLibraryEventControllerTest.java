@@ -1,5 +1,7 @@
 package integrated.controller;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import ir.farbod.producer.KafkaBookLibraryEventProducerApplication;
 import ir.farbod.producer.config.AutoConfigTopic;
 import ir.farbod.producer.entity.Book;
@@ -41,14 +43,17 @@ class BookLibraryEventControllerTest {
     @Autowired
     private EmbeddedKafkaBroker kafkaBroker;
 
+    private ObjectMapper objectMapper;
+
     private Consumer<Integer, String> consumer;
 
     @BeforeEach
     void setUp() {
         Map<String, Object> configs = new HashMap<>(KafkaTestUtils.consumerProps("group1", "true", kafkaBroker));
-
         consumer = new DefaultKafkaConsumerFactory<>(configs, new IntegerDeserializer(), new StringDeserializer()).createConsumer();
         kafkaBroker.consumeFromAllEmbeddedTopics(consumer);
+
+        objectMapper = new ObjectMapper();
     }
 
     @AfterEach
@@ -57,21 +62,106 @@ class BookLibraryEventControllerTest {
     }
 
     @Test
-    @Timeout(3)
-    void save_async() throws InterruptedException {
+    void save_async() {
         //given
         String URL = "/v1/book-lib-event/async";
 
         Book book = Book.builder()
                 .id(123L)
                 .author("Saeed")
-                .name("book name").build();
+                .name("book name")
+                .build();
+        var bookEventLibrary = BookLibraryEvent.builder()
+                .eventId(null)
+                .book(book)
+                .build();
 
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
-        HttpEntity<Book> requestBody = new HttpEntity<>(book, headers);
+        HttpEntity<BookLibraryEvent> requestBody = new HttpEntity<>(bookEventLibrary, headers);
 
-        String expectedConsumerRecord = "{\"id\":123,\"name\":\"book name\",\"author\":\"Saeed\"}";
+        //when
+        ResponseEntity<BookLibraryEvent> response = restTemplate.exchange(URL, HttpMethod.POST, requestBody, BookLibraryEvent.class);
+
+        //then
+        assertEquals(HttpStatus.CREATED, response.getStatusCode());
+    }
+
+    @Test
+    void update_async() {
+        //given
+        String URL = "/v1/book-lib-event/async";
+
+        Book book = Book.builder()
+                .id(123L)
+                .author("Saeed")
+                .name("book name")
+                .build();
+        var bookEventLibrary = BookLibraryEvent.builder()
+                .eventId(1)
+                .book(book)
+                .build();
+
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_JSON);
+        HttpEntity<BookLibraryEvent> requestBody = new HttpEntity<>(bookEventLibrary, headers);
+
+        //when
+        ResponseEntity<Object> response = restTemplate.exchange(URL, HttpMethod.PUT, requestBody, Object.class);
+
+        //then
+        assertEquals(HttpStatus.OK, response.getStatusCode());
+    }
+
+    @Test
+    void update_async_without_eventId() {
+        //given
+        String URL = "/v1/book-lib-event/async";
+
+        Book book = Book.builder()
+                .id(123L)
+                .author("Saeed")
+                .name("book name")
+                .build();
+        var bookEventLibrary = BookLibraryEvent.builder()
+                .eventId(null)
+                .book(book)
+                .build();
+
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_JSON);
+        HttpEntity<BookLibraryEvent> requestBody = new HttpEntity<>(bookEventLibrary, headers);
+
+        //when
+        ResponseEntity<String> response = restTemplate.exchange(URL, HttpMethod.PUT, requestBody, String.class);
+
+        //then
+        assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
+        assertEquals("Please set eventId to valid value.", response.getBody());
+    }
+
+
+    @Test
+    @Timeout(3)
+    void save_sync() throws InterruptedException, JsonProcessingException {
+        //given
+        String URL = "/v1/book-lib-event/sync";
+
+        Book book = Book.builder()
+                .id(1923L)
+                .author("Saeed")
+                .name("book name")
+                .build();
+        var bookEventLibrary = BookLibraryEvent.builder()
+                .eventId(null)
+                .book(book)
+                .build();
+
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_JSON);
+        HttpEntity<BookLibraryEvent> requestBody = new HttpEntity<>(bookEventLibrary, headers);
+
+        String expectedConsumerRecord = objectMapper.writeValueAsString(bookEventLibrary);
 
         //when
         ResponseEntity<BookLibraryEvent> response = restTemplate.exchange(URL, HttpMethod.POST, requestBody, BookLibraryEvent.class);
@@ -80,12 +170,9 @@ class BookLibraryEventControllerTest {
         //Thread.sleep(3000);
 
         //then
-        assertEquals(response.getStatusCode(), HttpStatus.CREATED);
+        assertEquals(HttpStatus.CREATED, response.getStatusCode());
 
-        assertEquals(consumerRecord.value(), expectedConsumerRecord);
+        assertEquals(expectedConsumerRecord, consumerRecord.value());
     }
 
-    @Test
-    void save_sync() {
-    }
 }

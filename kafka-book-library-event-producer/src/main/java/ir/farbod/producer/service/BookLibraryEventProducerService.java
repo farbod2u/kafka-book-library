@@ -3,48 +3,59 @@ package ir.farbod.producer.service;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import ir.farbod.producer.entity.BookLibraryEvent;
-import ir.farbod.producer.exception.RequestException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.kafka.clients.producer.ProducerRecord;
 import org.apache.kafka.common.header.Header;
 import org.apache.kafka.common.header.internals.RecordHeader;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.annotation.Profile;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.kafka.support.SendResult;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.TimeUnit;
+import java.util.concurrent.CompletableFuture;
 
 @Service
 @RequiredArgsConstructor
 @Slf4j
+@Profile("dev")
 public class BookLibraryEventProducerService {
 
     private final KafkaTemplate<Integer, String> kafkaTemplate;
     private final ObjectMapper objectMapper;
 
-    private final String TOPIC = "book-lib-event";
+    @Value("${spring.kafka.template.default-topic}")
+    private String TOPIC;
 
-    public void sendBookEvent_Async(BookLibraryEvent event) throws JsonProcessingException {
+    public CompletableFuture<SendResult<Integer, String>> sendBookEvent_Async(BookLibraryEvent event) throws JsonProcessingException {
         var key = event.getEventId();
-        var value = objectMapper.writeValueAsString(event.getBook());
+        var value = objectMapper.writeValueAsString(event);
 
-        kafkaTemplate.sendDefault(key, value)
-                .whenComplete((result, throwable) -> {
+        CompletableFuture<SendResult<Integer, String>> sendResultCompletableFuture = kafkaTemplate.send(buildProducerRecord(TOPIC, key, value));
+        sendResultCompletableFuture
+                .whenCompleteAsync((result, throwable) -> {
                     if (throwable == null)
                         handleSuccess(result);
                     else
                         handleException(throwable);
                 });
+
+//                .whenComplete((result, throwable) -> {
+//                    if (throwable == null)
+//                        handleSuccess(result);
+//                    else
+//                        handleException(throwable);
+//                });
+        return sendResultCompletableFuture;
     }
 
     public SendResult<Integer, String> sendBookEvent_Sync(BookLibraryEvent event) {
         SendResult<Integer, String> result = null;
         try {
             var key = event.getEventId();
-            var value = objectMapper.writeValueAsString(event.getBook());
+            var value = objectMapper.writeValueAsString(event);
 
 //            result = kafkaTemplate.sendDefault(key, value).get(1, TimeUnit.SECONDS);
 //            or
@@ -67,7 +78,7 @@ public class BookLibraryEventProducerService {
     }
 
     private void handleException(Throwable throwable) {
-        log.error("Error on send with exception {}", throwable);
+        log.error("Error on send with exception ", throwable);
     }
 
     private void handleSuccess(SendResult<Integer, String> result) {
