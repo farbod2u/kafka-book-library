@@ -11,10 +11,7 @@ import org.apache.kafka.clients.consumer.Consumer;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.common.serialization.IntegerDeserializer;
 import org.apache.kafka.common.serialization.StringDeserializer;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.Timeout;
+import org.junit.jupiter.api.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.web.client.TestRestTemplate;
@@ -36,6 +33,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 @TestPropertySource(properties = {
         "spring.kafka.producer.bootstrap-servers=${spring.embedded.kafka.brokers}",
         "spring.kafka.admin.properties.bootstrap.servers=${spring.embedded.kafka.brokers}"})
+@TestMethodOrder(MethodOrderer.OrderAnnotation.class)
 class BookLibraryEventControllerTest {
 
     @Autowired
@@ -47,6 +45,9 @@ class BookLibraryEventControllerTest {
     private ObjectMapper objectMapper;
 
     private Consumer<Integer, String> consumer;
+
+    // @Value("${}")
+    private String TOPIC;
 
     @BeforeEach
     void setUp() {
@@ -63,6 +64,7 @@ class BookLibraryEventControllerTest {
     }
 
     @Test
+    @Order(2)
     void save_async() {
         //given
         String URL = "/v1/book-lib-event/async";
@@ -89,6 +91,7 @@ class BookLibraryEventControllerTest {
     }
 
     @Test
+    @Order(3)
     void update_async() {
         //given
         String URL = "/v1/book-lib-event/async";
@@ -115,6 +118,7 @@ class BookLibraryEventControllerTest {
     }
 
     @Test
+    @Order(4)
     void update_async_without_eventId() {
         //given
         String URL = "/v1/book-lib-event/async";
@@ -141,10 +145,10 @@ class BookLibraryEventControllerTest {
         assertEquals("Please set eventId to valid value.", response.getBody());
     }
 
-
-    @Test
     @Timeout(3)
-    void save_sync() throws InterruptedException, JsonProcessingException {
+    @Test
+    @Order(1)
+    void save_sync() throws JsonProcessingException {
         //given
         String URL = "/v1/book-lib-event/sync";
 
