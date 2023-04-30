@@ -1,22 +1,27 @@
 package ir.farbod.consumer.entity;
 
-import jakarta.validation.constraints.*;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import jakarta.persistence.*;
+import lombok.*;
 
 @AllArgsConstructor
 @NoArgsConstructor
 @Data
 @Builder
+@Entity
 public class Book {
 
-    @NotNull
+    @Id
     private Long id;
-    @NotBlank
+
+    @Column(nullable = false)
     private String name;
-    @NotBlank
+
+    @Column(nullable = false)
     private String author;
+
+    @OneToOne
+    @JoinColumn(name = "eventId")
+    @ToString.Exclude
+    private BookLibraryEvent bookLibraryEvent;
 
 }

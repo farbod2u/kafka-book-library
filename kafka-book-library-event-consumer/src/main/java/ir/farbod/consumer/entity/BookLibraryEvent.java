@@ -1,7 +1,6 @@
 package ir.farbod.consumer.entity;
 
-import jakarta.validation.Valid;
-import jakarta.validation.constraints.NotNull;
+import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -12,12 +11,17 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @Data
 @Builder
+@Entity
 public class BookLibraryEvent {
 
+    @Id
+    @GeneratedValue(strategy = GenerationType.AUTO)
     private Integer eventId;
-    @NotNull
-    @Valid
+
+    @OneToOne(mappedBy = "bookLibraryEvent", cascade = CascadeType.ALL)
     private Book book;
+
+    @Enumerated(EnumType.STRING)
     private LibraryEventType libraryEventType;
 
 }
