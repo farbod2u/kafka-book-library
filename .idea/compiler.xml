@@ -8,12 +8,14 @@
         <sourceTestOutputDir name="target/generated-test-sources/test-annotations" />
         <outputRelativeToContentRoot value="true" />
         <module name="kafka-book-library" />
+        <module name="kafka-book-library-event-consumer" />
         <module name="kafka-book-library-event-producer" />
       </profile>
     </annotationProcessing>
   </component>
   <component name="JavacSettings">
     <option name="ADDITIONAL_OPTIONS_OVERRIDE">
+      <module name="kafka-book-library-event-consumer" options="-parameters" />
       <module name="kafka-book-library-event-producer" options="-parameters" />
     </option>
   </component>

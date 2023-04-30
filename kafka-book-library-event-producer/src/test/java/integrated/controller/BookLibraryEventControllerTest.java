@@ -6,6 +6,7 @@ import ir.farbod.producer.KafkaBookLibraryEventProducerApplication;
 import ir.farbod.producer.config.AutoConfigTopic;
 import ir.farbod.producer.entity.Book;
 import ir.farbod.producer.entity.BookLibraryEvent;
+import ir.farbod.producer.entity.LibraryEventType;
 import org.apache.kafka.clients.consumer.Consumer;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.common.serialization.IntegerDeserializer;
@@ -155,6 +156,7 @@ class BookLibraryEventControllerTest {
         var bookEventLibrary = BookLibraryEvent.builder()
                 .eventId(null)
                 .book(book)
+                .libraryEventType(LibraryEventType.NEW)
                 .build();
 
         HttpHeaders headers = new HttpHeaders();

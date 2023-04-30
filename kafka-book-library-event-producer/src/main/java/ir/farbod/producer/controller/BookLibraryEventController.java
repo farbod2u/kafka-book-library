@@ -48,6 +48,8 @@ public class BookLibraryEventController {
 
     @PostMapping("/sync")
     public ResponseEntity<BookLibraryEvent> save_sync(@RequestBody BookLibraryEvent bookLibraryEvent) throws JsonProcessingException, ExecutionException, InterruptedException {
+
+        bookLibraryEvent.setLibraryEventType(LibraryEventType.NEW);
         log.info("before send");
         SendResult<Integer, String> result = bookLibraryEventProducerService.sendBookEvent_Sync(bookLibraryEvent);
         log.info("after sent ==> {}", result.toString());
