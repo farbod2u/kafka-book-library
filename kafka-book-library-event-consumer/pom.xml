@@ -74,7 +74,7 @@
                         </goals>
                         <configuration>
                             <sources>
-                                <source>src/test/java/intg</source>
+                                <source>src/test/java/integration</source>
                                 <source>src/test/java/unit</source>
                             </sources>
                         </configuration>
