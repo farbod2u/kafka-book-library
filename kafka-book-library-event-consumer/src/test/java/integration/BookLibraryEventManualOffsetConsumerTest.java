@@ -29,8 +29,7 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.isA;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
@@ -43,6 +42,8 @@ import static org.mockito.Mockito.verify;
         "spring.kafka.consumer.bootstrap-servers=${spring.embedded.kafka.brokers}"
 })
 public class BookLibraryEventManualOffsetConsumerTest {
+
+    // https://www.testcontainers.org/
 
     @Autowired
     private EmbeddedKafkaBroker kafkaBroker;
@@ -73,11 +74,11 @@ public class BookLibraryEventManualOffsetConsumerTest {
 
     @AfterEach
     void tearDown() {
-
+        bookLibraryEventRepository.deleteAll();
     }
 
     @Test
-    void publishNewLibraryEvent() throws JsonProcessingException, ExecutionException, InterruptedException {
+    void publishNewBookLibraryEvent() throws JsonProcessingException, ExecutionException, InterruptedException {
         //given
         var book = Book.builder()
                 .id(123L)
@@ -110,4 +111,98 @@ public class BookLibraryEventManualOffsetConsumerTest {
             assertEquals(book.getId(), bookLibraryEvent.getBook().getId());
         });
     }
+
+    @Test
+    void publishUpdateBookLibraryEvent() throws JsonProcessingException, ExecutionException, InterruptedException {
+        //given
+        var book = Book.builder()
+                .id(123L)
+                .author("Saeed")
+                .name("book name")
+                .build();
+        var bookEventLibrary = BookLibraryEvent.builder()
+                .eventId(null)
+                .book(book)
+                .libraryEventType(LibraryEventType.NEW)
+                .build();
+
+        BookLibraryEvent savedEvent = bookLibraryEventRepository.save(bookEventLibrary);
+        savedEvent.setLibraryEventType(LibraryEventType.UPDATE);
+        savedEvent.getBook().setName("Book name #2");
+
+        String savedEventJson = objectMapper.writeValueAsString(savedEvent);
+
+        //when
+        kafkaTemplate.sendDefault(savedEvent.getEventId(), savedEventJson).get();
+
+        CountDownLatch countDownLatch = new CountDownLatch(1);
+        countDownLatch.await(3, TimeUnit.SECONDS);
+
+        //then
+        verify(bookLiraryEventConsumerSpy, times(1)).onMessage(isA(ConsumerRecord.class), isA(Acknowledgment.class));
+        verify(bookLibraryEventServiceSpy, times(1)).processEvent(isA(ConsumerRecord.class));
+
+        BookLibraryEvent actualEvent = bookLibraryEventRepository.findById(savedEvent.getEventId()).get();
+        assertEquals(savedEvent.getBook().getName(), actualEvent.getBook().getName());
+    }
+
+    @Test
+    void publishUpdateBookLibraryEvent_with_null_eventId() throws JsonProcessingException, ExecutionException, InterruptedException {
+        //given
+        var book = Book.builder()
+                .id(123L)
+                .author("Saeed")
+                .name("book name")
+                .build();
+        var bookEventLibrary = BookLibraryEvent.builder()
+                .eventId(null)
+                .book(book)
+                .libraryEventType(LibraryEventType.UPDATE)
+                .build();
+
+        String bookEventLibraryJson = objectMapper.writeValueAsString(bookEventLibrary);
+
+        //when
+        kafkaTemplate.sendDefault(bookEventLibrary.getEventId(), bookEventLibraryJson).get();
+
+        CountDownLatch countDownLatch = new CountDownLatch(1);
+        countDownLatch.await(5, TimeUnit.SECONDS);
+
+        //then
+        verify(bookLiraryEventConsumerSpy, times(10)).onMessage(isA(ConsumerRecord.class), isA(Acknowledgment.class));
+        verify(bookLibraryEventServiceSpy, times(10)).processEvent(isA(ConsumerRecord.class));
+
+       // assertThrows(IllegalArgumentException.class, () -> bookLibraryEventServiceSpy.processEvent(isA(ConsumerRecord.class)));
+
+    }
+
+    @Test
+    void publishUpdateBookLibraryEvent_with_invalid_eventId() throws JsonProcessingException, ExecutionException, InterruptedException {
+        //given
+        var book = Book.builder()
+                .id(123L)
+                .author("Saeed")
+                .name("book name")
+                .build();
+        var bookEventLibrary = BookLibraryEvent.builder()
+                .eventId(1)
+                .book(book)
+                .libraryEventType(LibraryEventType.UPDATE)
+                .build();
+
+        String bookEventLibraryJson = objectMapper.writeValueAsString(bookEventLibrary);
+
+        //when
+        kafkaTemplate.sendDefault(bookEventLibrary.getEventId(), bookEventLibraryJson).get();
+
+        CountDownLatch countDownLatch = new CountDownLatch(1);
+        countDownLatch.await(5, TimeUnit.SECONDS);
+
+        //then
+        verify(bookLiraryEventConsumerSpy, times(10)).onMessage(isA(ConsumerRecord.class), isA(Acknowledgment.class));
+        verify(bookLibraryEventServiceSpy, times(10)).processEvent(isA(ConsumerRecord.class));
+
+    }
+
+
 }
