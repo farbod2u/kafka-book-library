@@ -8,7 +8,7 @@ import org.springframework.stereotype.Component;
 
 //@Component
 @Slf4j
-public class BookLibraryConsumerAutoOffsetService {
+public class BookLibraryEventAutoOffsetConsumer {
 
     @Value("${spring.kafka.template.default-topic}")
     private String TOPIC;

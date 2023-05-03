@@ -13,7 +13,7 @@ import org.springframework.stereotype.Component;
 @Component
 @Slf4j
 @RequiredArgsConstructor
-public class BookLibraryConsumerManualOffsetService implements AcknowledgingMessageListener<Integer, String> {
+public class BookLibraryEventManualOffsetConsumer implements AcknowledgingMessageListener<Integer, String> {
 
     private final BookLibraryEventService bookLibraryEventService;
 
