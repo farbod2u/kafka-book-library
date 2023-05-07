@@ -46,7 +46,7 @@ public class BookLibraryEventService {
             entity = getByEventId(bookLibraryEvent.getEventId());
         }
         catch (Exception e){
-            throw new IllegalArgumentException("Not a valid eventId");
+            throw e; //new IllegalArgumentException("Not a valid eventId");
         }
 
         log.info("Validation is successfull for eventId : {} ", entity.getEventId());

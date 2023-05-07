@@ -169,13 +169,14 @@ public class BookLibraryEventManualOffsetConsumerTest {
         countDownLatch.await(5, TimeUnit.SECONDS);
 
         //then
-        verify(bookLiraryEventConsumerSpy, times(10)).onMessage(isA(ConsumerRecord.class), isA(Acknowledgment.class));
-        verify(bookLibraryEventServiceSpy, times(10)).processEvent(isA(ConsumerRecord.class));
+        verify(bookLiraryEventConsumerSpy, times(1)).onMessage(isA(ConsumerRecord.class), isA(Acknowledgment.class));
+        verify(bookLibraryEventServiceSpy, times(1)).processEvent(isA(ConsumerRecord.class));
 
        // assertThrows(IllegalArgumentException.class, () -> bookLibraryEventServiceSpy.processEvent(isA(ConsumerRecord.class)));
 
     }
 
+    // retryable exception
     @Test
     void publishUpdateBookLibraryEvent_with_invalid_eventId() throws JsonProcessingException, ExecutionException, InterruptedException {
         //given
@@ -199,8 +200,8 @@ public class BookLibraryEventManualOffsetConsumerTest {
         countDownLatch.await(5, TimeUnit.SECONDS);
 
         //then
-        verify(bookLiraryEventConsumerSpy, times(10)).onMessage(isA(ConsumerRecord.class), isA(Acknowledgment.class));
-        verify(bookLibraryEventServiceSpy, times(10)).processEvent(isA(ConsumerRecord.class));
+        verify(bookLiraryEventConsumerSpy, times(3)).onMessage(isA(ConsumerRecord.class), isA(Acknowledgment.class));
+        verify(bookLibraryEventServiceSpy, times(3)).processEvent(isA(ConsumerRecord.class));
 
     }
 
