@@ -24,7 +24,7 @@ public class BookLibraryEventService {
     public void processEvent(ConsumerRecord<Integer, String> consumerRecord) throws JsonProcessingException {
         BookLibraryEvent bookLibraryEvent = objectMapper.readValue(consumerRecord.value(), BookLibraryEvent.class);
 
-        if (consumerRecord.key() == 999)
+        if (consumerRecord.key() != null && consumerRecord.key() == 999)
             throw new RecoverableDataAccessException("Network error");
 
         switch (bookLibraryEvent.getLibraryEventType()) {
