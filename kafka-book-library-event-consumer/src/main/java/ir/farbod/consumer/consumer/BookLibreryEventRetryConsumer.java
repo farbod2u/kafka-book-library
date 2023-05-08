@@ -20,7 +20,9 @@ public class BookLibreryEventRetryConsumer {
 
     private final BookLibraryEventService bookLibraryEventService;
 
-    @KafkaListener(topics = {"${topics.retry}"}, groupId = "${groups.retry}")
+    @KafkaListener(topics = {"${topics.retry}"},
+            autoStartup = "${retryListener.startup:true}",
+            groupId= "${groups.retry}")
     public void onMessage(ConsumerRecord<Integer, String> consumerRecord, Acknowledgment acknowledgment) throws JsonProcessingException {
         log.info("Retry ConsumerRecord: ====> {} ", consumerRecord);
         consumerRecord.headers().forEach(header -> log.info("Header Key : {} , Value : {}", header.key(), new String(header.value())));

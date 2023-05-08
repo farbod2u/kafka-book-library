@@ -23,6 +23,7 @@ import org.springframework.boot.test.mock.mockito.SpyBean;
 import org.springframework.kafka.config.KafkaListenerEndpointRegistry;
 import org.springframework.kafka.core.DefaultKafkaConsumerFactory;
 import org.springframework.kafka.core.KafkaTemplate;
+import org.springframework.kafka.listener.MessageListenerContainer;
 import org.springframework.kafka.support.Acknowledgment;
 import org.springframework.kafka.test.EmbeddedKafkaBroker;
 import org.springframework.kafka.test.context.EmbeddedKafka;
@@ -36,6 +37,7 @@ import java.util.Map;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.isA;
@@ -47,7 +49,8 @@ import static org.mockito.Mockito.verify;
 @EmbeddedKafka(topics = {"book-lib-event", "book-lib-event.RETRY", "book-lib-event.DLT"}, partitions = 3)
 @TestPropertySource(properties = {
         "spring.kafka.producer.bootstrap-servers=${spring.embedded.kafka.brokers}",
-        "spring.kafka.consumer.bootstrap-servers=${spring.embedded.kafka.brokers}"
+        "spring.kafka.consumer.bootstrap-servers=${spring.embedded.kafka.brokers}",
+        "retryListener.startup=false"
 })
 public class BookLibraryEventManualOffsetConsumerTest {
 
@@ -76,16 +79,25 @@ public class BookLibraryEventManualOffsetConsumerTest {
 
     private Consumer<Integer, String> consumer;
 
-    @Value("book-lib-event.RETRY")
+    @Value("${topics.retry}")
     private String retryTopic;
 
-    @Value("book-lib-event.DLT")
+    @Value("${topics.dlt}")
     private String deadLetterTopic;
+
+    @Value("${spring.kafka.consumer.group-id}")
+    private String groupId;
 
     @BeforeEach
     void setup() {
-        listenerEndpointRegistry.getListenerContainers()
-                .forEach(messageListenerContainer -> ContainerTestUtils.waitForAssignment(messageListenerContainer, kafkaBroker.getPartitionsPerTopic()));
+
+        var listenerContainer = listenerEndpointRegistry.getListenerContainers()
+                .stream().filter(messageListenerContainer -> messageListenerContainer.getGroupId().equalsIgnoreCase(groupId))
+                .collect(Collectors.toList()).get(0);
+        ContainerTestUtils.waitForAssignment(listenerContainer, kafkaBroker.getPartitionsPerTopic());
+
+//        listenerEndpointRegistry.getListenerContainers()
+//                .forEach(messageListenerContainer -> ContainerTestUtils.waitForAssignment(messageListenerContainer, kafkaBroker.getPartitionsPerTopic()));
     }
 
     @AfterEach
