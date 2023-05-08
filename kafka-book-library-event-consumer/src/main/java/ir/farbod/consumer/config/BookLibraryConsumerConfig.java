@@ -2,7 +2,11 @@ package ir.farbod.consumer.config;
 
 import lombok.extern.slf4j.Slf4j;
 import org.apache.kafka.clients.admin.NewTopic;
+import org.apache.kafka.clients.producer.ProducerRecord;
 import org.apache.kafka.common.TopicPartition;
+import org.apache.kafka.common.header.Header;
+import org.apache.kafka.common.header.internals.RecordHeader;
+import org.apache.kafka.common.header.internals.RecordHeaders;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -21,7 +25,9 @@ import org.springframework.kafka.listener.DeadLetterPublishingRecoverer;
 import org.springframework.kafka.listener.DefaultErrorHandler;
 import org.springframework.kafka.support.ExponentialBackOffWithMaxRetries;
 
+import java.util.Arrays;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Configuration
 @Profile("dev")
@@ -39,8 +45,7 @@ public class BookLibraryConsumerConfig {
     private String deadLetterTopic;
 
     @Bean
-    public NewTopic getRetryTopic()
-    {
+    public NewTopic getRetryTopic() {
         log.info("Create retryTopic ==> " + retryTopic);
 
         return TopicBuilder.name(retryTopic)
@@ -56,12 +61,29 @@ public class BookLibraryConsumerConfig {
                     if (e.getCause() instanceof RecoverableDataAccessException) {
                         log.info("********* retryTopic, partition ==> {}", consumerRecord.partition());
                         return new TopicPartition(retryTopic, consumerRecord.partition());
-                    }
-                    else {
+                    } else {
                         log.info("********* deadLetterTopic, partition ==> {}", consumerRecord.partition());
                         return new TopicPartition(deadLetterTopic, consumerRecord.partition());
                     }
                 });
+
+//        recoverer.setHeadersFunction((consumerRecord, e) -> {
+//            List<Header> headerList = Arrays.stream(consumerRecord.headers().toArray())
+//                    .filter(header -> header.key().equalsIgnoreCase("retry-count"))
+//                    .collect(Collectors.toList());
+//
+//            Integer retryCount = 0;
+//            Header header = null;
+//            if (!headerList.isEmpty()) {
+//                header = headerList.get(0);
+//                retryCount = Integer.parseInt(new String(header.value()));
+//            }
+//
+//            ++retryCount;
+//
+//            List<Header> headers = List.of(new RecordHeader("retry-count", retryCount.toString().getBytes()));
+//            return new RecordHeaders(headers);
+//        });
 
         return recoverer;
     }
