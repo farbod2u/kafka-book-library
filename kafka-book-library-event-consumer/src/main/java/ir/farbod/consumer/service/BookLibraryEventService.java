@@ -8,6 +8,7 @@ import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
+import org.springframework.dao.RecoverableDataAccessException;
 import org.springframework.stereotype.Service;
 
 import java.util.Optional;
@@ -22,6 +23,9 @@ public class BookLibraryEventService {
 
     public void processEvent(ConsumerRecord<Integer, String> consumerRecord) throws JsonProcessingException {
         BookLibraryEvent bookLibraryEvent = objectMapper.readValue(consumerRecord.value(), BookLibraryEvent.class);
+
+        if (consumerRecord.key() == 999)
+            throw new RecoverableDataAccessException("Network error");
 
         switch (bookLibraryEvent.getLibraryEventType()) {
             case NEW -> {
@@ -42,11 +46,10 @@ public class BookLibraryEventService {
             throw new IllegalArgumentException("eventId is missing");
 
         BookLibraryEvent entity = null;
-        try{
+        try {
             entity = getByEventId(bookLibraryEvent.getEventId());
-        }
-        catch (Exception e){
-            throw e; //new IllegalArgumentException("Not a valid eventId");
+        } catch (Exception e) {
+            throw new IllegalArgumentException("Not a valid eventId");
         }
 
         log.info("Validation is successfull for eventId : {} ", entity.getEventId());
