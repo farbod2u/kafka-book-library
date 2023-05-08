@@ -1,7 +1,10 @@
-
 spring:
   profiles:
     active: dev
+
+topics:
+  retry: 'book-lib-event.RETRY'
+  dlt: 'book-lib-event.DLT'
 
 server:
   port: 8081
@@ -19,6 +22,10 @@ spring:
       key-deserializer: org.apache.kafka.common.serialization.IntegerDeserializer
       value-deserializer: org.apache.kafka.common.serialization.StringDeserializer
       group-id: library-events-listener-group
+    producer:
+      bootstrap-servers: localhost:9092, localhost:9093, localhost:9094
+      key-serializer: org.apache.kafka.common.serialization.IntegerSerializer
+      value-serializer: org.apache.kafka.common.serialization.StringSerializer
     listener:
       ack-mode: manual
       concurrency: 3 # suitable for non Kubernates environment
@@ -40,8 +47,8 @@ spring:
     activate:
       on-profile: prod
   kafka:
-#    template:
-#      default-topic: book-lib-event
+    #    template:
+    #      default-topic: book-lib-event
     consumer:
       bootstrap-servers: prod:9092
       key-deserializer: org.apache.kafka.common.serialization.IntegerDeserializer
