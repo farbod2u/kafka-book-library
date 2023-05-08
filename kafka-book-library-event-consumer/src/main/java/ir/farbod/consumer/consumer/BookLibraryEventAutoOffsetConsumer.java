@@ -13,7 +13,8 @@ public class BookLibraryEventAutoOffsetConsumer {
     @Value("${spring.kafka.template.default-topic}")
     private String TOPIC;
 
-    @KafkaListener(topics = {"${spring.kafka.template.default-topic}"})
+    @KafkaListener(topics = {"${spring.kafka.template.default-topic}"},
+            groupId = "${spring.kafka.consumer.group-id}")
     public void onMessage(ConsumerRecord<Integer, String> consumerRecord){
         log.info("ConsumerRecord: ====> {} ", consumerRecord);
 

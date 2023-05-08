@@ -19,7 +19,8 @@ public class BookLibraryEventManualOffsetConsumer implements AcknowledgingMessag
 
     @SneakyThrows
     @Override
-    @KafkaListener(topics = {"${spring.kafka.template.default-topic}"})
+    @KafkaListener(topics = {"${spring.kafka.template.default-topic}"},
+            groupId = "${spring.kafka.consumer.group-id}")
     public void onMessage(ConsumerRecord<Integer, String> consumerRecord, Acknowledgment acknowledgment) {
         log.info("Manual ConsumerRecord: ====> {} ", consumerRecord);
 

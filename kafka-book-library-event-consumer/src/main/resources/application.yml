@@ -6,6 +6,10 @@ topics:
   retry: 'book-lib-event.RETRY'
   dlt: 'book-lib-event.DLT'
 
+groups:
+  retry: 'library-events-listener-group.RETRY'
+  dlt: 'library-events-listener-group.DLT'
+
 server:
   port: 8081
 
