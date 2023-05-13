@@ -7,6 +7,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
+
 /***
  * @author Saeed Safaeian
  * Date : 13/05/2023
@@ -30,6 +32,14 @@ public class FailureRecordService {
                 .topic(consumerRecord.topic())
                 .build();
 
+        failureRecordRepository.save(entity);
+    }
+
+    public List<FailureRecord> findAllByStatus(String status) {
+        return failureRecordRepository.findAllByStatus(status);
+    }
+
+    public void update(FailureRecord entity) {
         failureRecordRepository.save(entity);
     }
 }
