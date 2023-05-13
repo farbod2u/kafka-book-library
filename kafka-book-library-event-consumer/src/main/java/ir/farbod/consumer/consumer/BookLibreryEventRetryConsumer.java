@@ -5,9 +5,14 @@ import ir.farbod.consumer.service.BookLibraryEventService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
+import org.apache.kafka.common.header.Header;
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.kafka.support.Acknowledgment;
+import org.springframework.kafka.support.KafkaHeaders;
 import org.springframework.stereotype.Component;
+
+import java.util.Arrays;
+import java.util.stream.Collectors;
 
 /***
  * @author Saeed Safaeian
@@ -22,10 +27,12 @@ public class BookLibreryEventRetryConsumer {
 
     @KafkaListener(topics = {"${topics.retry}"},
             autoStartup = "${retryListener.startup:true}",
-            groupId= "${groups.retry}")
+            groupId = "${groups.retry}")
     public void onMessage(ConsumerRecord<Integer, String> consumerRecord, Acknowledgment acknowledgment) throws JsonProcessingException {
         log.info("Retry ConsumerRecord: ====> {} ", consumerRecord);
         consumerRecord.headers().forEach(header -> log.info("Header Key : {} , Value : {}", header.key(), new String(header.value())));
+
+        log.info("Consumer Record Timestamp : {}", consumerRecord.timestamp());
 
         bookLibraryEventService.processEvent(consumerRecord);
 
