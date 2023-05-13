@@ -23,7 +23,6 @@ import org.springframework.boot.test.mock.mockito.SpyBean;
 import org.springframework.kafka.config.KafkaListenerEndpointRegistry;
 import org.springframework.kafka.core.DefaultKafkaConsumerFactory;
 import org.springframework.kafka.core.KafkaTemplate;
-import org.springframework.kafka.listener.MessageListenerContainer;
 import org.springframework.kafka.support.Acknowledgment;
 import org.springframework.kafka.test.EmbeddedKafkaBroker;
 import org.springframework.kafka.test.context.EmbeddedKafka;
@@ -39,7 +38,8 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.mockito.ArgumentMatchers.isA;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
@@ -50,6 +50,7 @@ import static org.mockito.Mockito.verify;
 @TestPropertySource(properties = {
         "spring.kafka.producer.bootstrap-servers=${spring.embedded.kafka.brokers}",
         "spring.kafka.consumer.bootstrap-servers=${spring.embedded.kafka.brokers}",
+        "spring.kafka.admin.properties.bootstrap.servers=${spring.embedded.kafka.brokers}",
         "retryListener.startup=false"
 })
 public class BookLibraryEventManualOffsetConsumerTest {
@@ -200,7 +201,14 @@ public class BookLibraryEventManualOffsetConsumerTest {
         verify(bookLiraryEventConsumerSpy, times(1)).onMessage(isA(ConsumerRecord.class), isA(Acknowledgment.class));
         verify(bookLibraryEventServiceSpy, times(1)).processEvent(isA(ConsumerRecord.class));
 
-        // assertThrows(IllegalArgumentException.class, () -> bookLibraryEventServiceSpy.processEvent(isA(ConsumerRecord.class)));
+
+        Map<String, Object> configs = new HashMap<>(KafkaTestUtils.consumerProps("group2", "true", kafkaBroker));
+        consumer = new DefaultKafkaConsumerFactory<>(configs, new IntegerDeserializer(), new StringDeserializer()).createConsumer();
+        kafkaBroker.consumeFromAnEmbeddedTopic(consumer, deadLetterTopic);
+
+        ConsumerRecord<Integer, String> consumerRecord = KafkaTestUtils.getSingleRecord(consumer, deadLetterTopic);
+        System.out.println("consumerRecord = " + consumerRecord);
+        assertEquals(bookEventLibraryJson, consumerRecord.value());
 
     }
 
@@ -229,6 +237,15 @@ public class BookLibraryEventManualOffsetConsumerTest {
         //then
         verify(bookLiraryEventConsumerSpy, times(1)).onMessage(isA(ConsumerRecord.class), isA(Acknowledgment.class));
         verify(bookLibraryEventServiceSpy, times(1)).processEvent(isA(ConsumerRecord.class));
+
+
+        Map<String, Object> configs = new HashMap<>(KafkaTestUtils.consumerProps("group3", "true", kafkaBroker));
+        consumer = new DefaultKafkaConsumerFactory<>(configs, new IntegerDeserializer(), new StringDeserializer()).createConsumer();
+        kafkaBroker.consumeFromAnEmbeddedTopic(consumer, deadLetterTopic);
+
+        ConsumerRecord<Integer, String> consumerRecord = KafkaTestUtils.getSingleRecord(consumer, deadLetterTopic);
+        System.out.println("consumerRecord = " + consumerRecord);
+        assertEquals(bookEventLibraryJson, consumerRecord.value());
 
     }
 
