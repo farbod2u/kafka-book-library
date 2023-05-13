@@ -47,7 +47,7 @@ public class RetryScheduler {
                 failureRecord.getTopic(),
                 failureRecord.getPartion(),
                 failureRecord.getOffset_value(),
-               1,// failureRecord.getErrorRecord_key(),
+                failureRecord.getErrorRecord_key(),
                 failureRecord.getErrorRecord_value().replace("999", "1")
         );
     }
