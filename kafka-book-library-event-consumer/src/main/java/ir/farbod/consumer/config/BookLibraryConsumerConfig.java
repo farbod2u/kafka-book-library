@@ -1,5 +1,6 @@
 package ir.farbod.consumer.config;
 
+import ir.farbod.consumer.service.FailureRecordService;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.kafka.clients.admin.NewTopic;
 import org.apache.kafka.clients.producer.ProducerRecord;
@@ -20,6 +21,7 @@ import org.springframework.kafka.config.ConcurrentKafkaListenerContainerFactory;
 import org.springframework.kafka.config.TopicBuilder;
 import org.springframework.kafka.core.ConsumerFactory;
 import org.springframework.kafka.core.KafkaTemplate;
+import org.springframework.kafka.listener.ConsumerRecordRecoverer;
 import org.springframework.kafka.listener.ContainerProperties;
 import org.springframework.kafka.listener.DeadLetterPublishingRecoverer;
 import org.springframework.kafka.listener.DefaultErrorHandler;
@@ -35,8 +37,14 @@ import java.util.stream.Collectors;
 @Slf4j
 public class BookLibraryConsumerConfig {
 
+    public static final String RETRY = "RETRY";
+    public static final String DEAD = "DEAD";
+
     @Autowired
     private KafkaTemplate kafkaTemplate;
+
+    @Autowired
+    private FailureRecordService failureRecordService;
 
     @Value("book-lib-event.RETRY")
     private String retryTopic;
@@ -95,8 +103,22 @@ public class BookLibraryConsumerConfig {
         exponentialBackOff.setInitialInterval(1_000L);
         exponentialBackOff.setMultiplier(2.0);
         exponentialBackOff.setMaxInterval(2000L);
+
+        ConsumerRecordRecoverer consumerRecordRecoverer = (consumerRecord, e) -> {
+
+            if (e.getCause() instanceof RecoverableDataAccessException) {
+                log.info("********* Recoverable error.");
+                failureRecordService.save(consumerRecord, e, RETRY);
+            } else {
+                log.info("********* non-Recoverable error.");
+                failureRecordService.save(consumerRecord, e, DEAD);
+            }
+        };
+
         var defaultErrorHandler = new DefaultErrorHandler(
-                publishingRecoverer(),
+                //publishingRecoverer()
+                consumerRecordRecoverer
+                ,
                 //backOff
                 exponentialBackOff
         );

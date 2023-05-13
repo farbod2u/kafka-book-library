@@ -3,11 +3,14 @@ package integration;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import ir.farbod.consumer.KafkaBookLibraryEventConsumerApplication;
+import ir.farbod.consumer.config.BookLibraryConsumerConfig;
 import ir.farbod.consumer.consumer.BookLibraryEventManualOffsetConsumer;
 import ir.farbod.consumer.entity.Book;
 import ir.farbod.consumer.entity.BookLibraryEvent;
+import ir.farbod.consumer.entity.FailureRecord;
 import ir.farbod.consumer.entity.LibraryEventType;
 import ir.farbod.consumer.repository.BookLibraryEventRepository;
+import ir.farbod.consumer.repository.FailureRecordRepository;
 import ir.farbod.consumer.service.BookLibraryEventService;
 import org.apache.kafka.clients.consumer.Consumer;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
@@ -77,6 +80,9 @@ public class BookLibraryEventManualOffsetConsumerTest {
 
     @Autowired
     private BookLibraryEventRepository bookLibraryEventRepository;
+
+    @Autowired
+    private FailureRecordRepository failureRecordRepository;
 
     private Consumer<Integer, String> consumer;
 
@@ -248,6 +254,44 @@ public class BookLibraryEventManualOffsetConsumerTest {
         assertEquals(bookEventLibraryJson, consumerRecord.value());
 
     }
+
+    @Test
+    void publishUpdateBookLibraryEvent_with_null_eventId_save_to_DB() throws JsonProcessingException, ExecutionException, InterruptedException {
+        //given
+        var book = Book.builder()
+                .id(123L)
+                .author("Saeed")
+                .name("book name")
+                .build();
+        var bookEventLibrary = BookLibraryEvent.builder()
+                .eventId(null)
+                .book(book)
+                .libraryEventType(LibraryEventType.UPDATE)
+                .build();
+
+        String bookEventLibraryJson = objectMapper.writeValueAsString(bookEventLibrary);
+
+        //when
+        kafkaTemplate.sendDefault(bookEventLibrary.getEventId(), bookEventLibraryJson).get();
+
+        CountDownLatch countDownLatch = new CountDownLatch(1);
+        countDownLatch.await(5, TimeUnit.SECONDS);
+
+        //then
+        verify(bookLiraryEventConsumerSpy, times(1)).onMessage(isA(ConsumerRecord.class), isA(Acknowledgment.class));
+        verify(bookLibraryEventServiceSpy, times(1)).processEvent(isA(ConsumerRecord.class));
+
+        List<FailureRecord> savedError = failureRecordRepository.findAll();
+        assertEquals(1, savedError.size());
+
+        savedError.forEach(failureRecord ->
+                System.out.println("failureRecord = " + failureRecord)
+        );
+
+        assertEquals(BookLibraryConsumerConfig.DEAD, savedError.get(0).getStatus());
+
+    }
+
 
 
     // retryable exception
