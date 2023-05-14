@@ -3,7 +3,7 @@ package ir.farbod.producer.controller;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import ir.farbod.producer.entity.BookLibraryEvent;
 import ir.farbod.producer.entity.LibraryEventType;
-import ir.farbod.producer.service.BookLibraryEventProducerService;
+import ir.farbod.producer.producer.BookLibraryEventProducer;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -20,14 +20,14 @@ import java.util.concurrent.ExecutionException;
 @Slf4j
 public class BookLibraryEventController {
 
-    private final BookLibraryEventProducerService bookLibraryEventProducerService;
+    private final BookLibraryEventProducer bookLibraryEventProducer;
 
     @PostMapping("/async")
     public ResponseEntity<BookLibraryEvent> save_async(@Valid @RequestBody BookLibraryEvent bookLibraryEvent) throws JsonProcessingException {
 
         bookLibraryEvent.setLibraryEventType(LibraryEventType.NEW);
         log.info("before send");
-        bookLibraryEventProducerService.sendBookEvent_Async(bookLibraryEvent);
+        bookLibraryEventProducer.sendBookEvent_Async(bookLibraryEvent);
         log.info("after sent");
         return ResponseEntity.status(HttpStatus.CREATED)
                 .body(bookLibraryEvent);
@@ -41,7 +41,7 @@ public class BookLibraryEventController {
                     .body("Please set eventId to valid value.");
 
         bookLibraryEvent.setLibraryEventType(LibraryEventType.UPDATE);
-        bookLibraryEventProducerService.sendBookEvent_Async(bookLibraryEvent);
+        bookLibraryEventProducer.sendBookEvent_Async(bookLibraryEvent);
         return ResponseEntity.status(HttpStatus.OK)
                 .body(bookLibraryEvent);
     }
@@ -51,7 +51,7 @@ public class BookLibraryEventController {
 
         bookLibraryEvent.setLibraryEventType(LibraryEventType.NEW);
         log.info("before send");
-        SendResult<Integer, String> result = bookLibraryEventProducerService.sendBookEvent_Sync(bookLibraryEvent);
+        SendResult<Integer, String> result = bookLibraryEventProducer.sendBookEvent_Sync(bookLibraryEvent);
         log.info("after sent ==> {}", result.toString());
         return ResponseEntity.status(HttpStatus.CREATED)
                 .body(bookLibraryEvent);

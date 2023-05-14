@@ -4,7 +4,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import ir.farbod.producer.entity.Book;
 import ir.farbod.producer.entity.BookLibraryEvent;
-import ir.farbod.producer.service.BookLibraryEventProducerService;
+import ir.farbod.producer.producer.BookLibraryEventProducer;
 import org.apache.kafka.clients.producer.ProducerRecord;
 import org.apache.kafka.clients.producer.RecordMetadata;
 import org.apache.kafka.common.TopicPartition;
@@ -27,7 +27,7 @@ import static org.mockito.ArgumentMatchers.isA;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
-class BookLibraryEventProducerServiceTest {
+class BookLibraryEventProducerTest {
 
     @Mock
     private KafkaTemplate<Integer, String> kafkaTemplate;
@@ -36,7 +36,7 @@ class BookLibraryEventProducerServiceTest {
     private ObjectMapper objectMapper = new ObjectMapper();
 
     @InjectMocks
-    private BookLibraryEventProducerService bookLibraryEventProducerService;
+    private BookLibraryEventProducer bookLibraryEventProducer;
 
     private String TOPIC = "book-lib-event";
 
@@ -52,13 +52,13 @@ class BookLibraryEventProducerServiceTest {
                 .book(book)
                 .build();
 
-        ReflectionTestUtils.setField(bookLibraryEventProducerService, "TOPIC", TOPIC);
+        ReflectionTestUtils.setField(bookLibraryEventProducer, "TOPIC", TOPIC);
 
         CompletableFuture<SendResult<Integer, String>> result = CompletableFuture.failedFuture(new RuntimeException("fail on kafka"));
         when(kafkaTemplate.send(isA(ProducerRecord.class))).thenReturn(result);
 
         //when
-        CompletableFuture<SendResult<Integer, String>> actualResult = bookLibraryEventProducerService.sendBookEvent_Async(bookLibraryEvent);
+        CompletableFuture<SendResult<Integer, String>> actualResult = bookLibraryEventProducer.sendBookEvent_Async(bookLibraryEvent);
 
         //then
         assertThrows(Exception.class, () -> actualResult.get());
@@ -77,7 +77,7 @@ class BookLibraryEventProducerServiceTest {
                 .book(book)
                 .build();
 
-        ReflectionTestUtils.setField(bookLibraryEventProducerService, "TOPIC", TOPIC);
+        ReflectionTestUtils.setField(bookLibraryEventProducer, "TOPIC", TOPIC);
 
         String eventString = objectMapper.writeValueAsString(bookLibraryEvent);
         ProducerRecord<Integer, String> producerRecord = new ProducerRecord<>(TOPIC, bookLibraryEvent.getEventId(), eventString);
@@ -89,7 +89,7 @@ class BookLibraryEventProducerServiceTest {
         when(kafkaTemplate.send(isA(ProducerRecord.class))).thenReturn(result);
 
         //when
-        SendResult<Integer, String> actualResult = bookLibraryEventProducerService.sendBookEvent_Async(bookLibraryEvent).get();
+        SendResult<Integer, String> actualResult = bookLibraryEventProducer.sendBookEvent_Async(bookLibraryEvent).get();
 
         //then
         assertEquals(eventString, actualResult.getProducerRecord().value());

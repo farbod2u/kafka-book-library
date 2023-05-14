@@ -1,4 +1,4 @@
-package ir.farbod.producer.service;
+package ir.farbod.producer.producer;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -21,7 +21,7 @@ import java.util.concurrent.CompletableFuture;
 @RequiredArgsConstructor
 @Slf4j
 @Profile("dev")
-public class BookLibraryEventProducerService {
+public class BookLibraryEventProducer {
 
     private final KafkaTemplate<Integer, String> kafkaTemplate;
     private final ObjectMapper objectMapper;

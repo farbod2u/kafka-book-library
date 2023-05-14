@@ -5,7 +5,7 @@ import ir.farbod.producer.KafkaBookLibraryEventProducerApplication;
 import ir.farbod.producer.controller.BookLibraryEventController;
 import ir.farbod.producer.entity.Book;
 import ir.farbod.producer.entity.BookLibraryEvent;
-import ir.farbod.producer.service.BookLibraryEventProducerService;
+import ir.farbod.producer.producer.BookLibraryEventProducer;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
@@ -35,7 +35,7 @@ class BookLibraryEventControllerTest {
     private ObjectMapper objectMapper;
 
     @MockBean
-    private BookLibraryEventProducerService bookLibraryEventProducerService;
+    private BookLibraryEventProducer bookLibraryEventProducer;
 
     @Test
     void save_async() throws Exception {
@@ -53,7 +53,7 @@ class BookLibraryEventControllerTest {
 
         String body = objectMapper.writeValueAsString(bookLibraryEvent);
 
-        when(bookLibraryEventProducerService.sendBookEvent_Async(isA(BookLibraryEvent.class))).thenReturn(null);
+        when(bookLibraryEventProducer.sendBookEvent_Async(isA(BookLibraryEvent.class))).thenReturn(null);
 
         //when
         //then
@@ -76,7 +76,7 @@ class BookLibraryEventControllerTest {
         String body = objectMapper.writeValueAsString(bookLibraryEvent);
 
 //        doNothing().when(bookLibraryEventProducerService).sendBookEvent_Async(isA(BookLibraryEvent.class));
-        when(bookLibraryEventProducerService.sendBookEvent_Async(isA(BookLibraryEvent.class))).thenReturn(null);
+        when(bookLibraryEventProducer.sendBookEvent_Async(isA(BookLibraryEvent.class))).thenReturn(null);
 
         //when
         //then
@@ -104,7 +104,7 @@ class BookLibraryEventControllerTest {
 
         String body = objectMapper.writeValueAsString(bookLibraryEvent);
 
-        when(bookLibraryEventProducerService.sendBookEvent_Async(isA(BookLibraryEvent.class))).thenReturn(null);
+        when(bookLibraryEventProducer.sendBookEvent_Async(isA(BookLibraryEvent.class))).thenReturn(null);
 
         //when
         //then
@@ -129,7 +129,7 @@ class BookLibraryEventControllerTest {
 
         String body = objectMapper.writeValueAsString(bookLibraryEvent);
 
-        when(bookLibraryEventProducerService.sendBookEvent_Async(isA(BookLibraryEvent.class))).thenReturn(null);
+        when(bookLibraryEventProducer.sendBookEvent_Async(isA(BookLibraryEvent.class))).thenReturn(null);
 
         //when
         //then
