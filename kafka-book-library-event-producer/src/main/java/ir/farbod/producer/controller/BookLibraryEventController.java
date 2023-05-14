@@ -7,6 +7,7 @@ import ir.farbod.producer.producer.BookLibraryEventProducer;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.kafka.common.Uuid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.kafka.support.SendResult;
@@ -26,6 +27,8 @@ public class BookLibraryEventController {
     public ResponseEntity<BookLibraryEvent> save_async(@Valid @RequestBody BookLibraryEvent bookLibraryEvent) throws JsonProcessingException {
 
         bookLibraryEvent.setLibraryEventType(LibraryEventType.NEW);
+        bookLibraryEvent.setGuid(Uuid.randomUuid().toString());
+
         log.info("before send");
         bookLibraryEventProducer.sendBookEvent_Async(bookLibraryEvent);
         log.info("after sent");
@@ -50,6 +53,8 @@ public class BookLibraryEventController {
     public ResponseEntity<BookLibraryEvent> save_sync(@RequestBody BookLibraryEvent bookLibraryEvent) throws JsonProcessingException, ExecutionException, InterruptedException {
 
         bookLibraryEvent.setLibraryEventType(LibraryEventType.NEW);
+        bookLibraryEvent.setGuid(Uuid.randomUuid().toString());
+
         log.info("before send");
         SendResult<Integer, String> result = bookLibraryEventProducer.sendBookEvent_Sync(bookLibraryEvent);
         log.info("after sent ==> {}", result.toString());

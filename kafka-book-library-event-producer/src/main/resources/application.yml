@@ -21,6 +21,19 @@ spring:
     admin:
       properties:
         bootstrap.servers: localhost:9092, localhost:9093, localhost:9094
+
+  jpa:
+    database: h2
+    database-platform: org.hibernate.dialect.H2Dialect
+    generate-ddl: true
+    show-sql: true
+  h2:
+    console:
+      enabled: true
+  datasource:
+    url: jdbc:h2:mem:bookLibDB
+    driver-class-name: org.h2.Driver
+
 #---
 #spring:
 #  config:

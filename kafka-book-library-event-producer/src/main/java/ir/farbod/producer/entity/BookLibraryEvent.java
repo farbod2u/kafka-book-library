@@ -19,5 +19,5 @@ public class BookLibraryEvent {
     @Valid
     private Book book;
     private LibraryEventType libraryEventType;
-
+    private String guid;
 }

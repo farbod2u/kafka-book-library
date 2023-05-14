@@ -3,6 +3,7 @@ package ir.farbod.producer.producer;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import ir.farbod.producer.entity.BookLibraryEvent;
+import ir.farbod.producer.service.FailureRecordService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.kafka.clients.producer.ProducerRecord;
@@ -23,8 +24,13 @@ import java.util.concurrent.CompletableFuture;
 @Profile("dev")
 public class BookLibraryEventProducer {
 
+    public static final String RETRY = "RETRY";
+    public static final String DEAD = "DEAD";
+    public static final String SUCCESS = "SUCCESS";
+
     private final KafkaTemplate<Integer, String> kafkaTemplate;
     private final ObjectMapper objectMapper;
+    private final FailureRecordService failureRecordService;
 
     @Value("${spring.kafka.template.default-topic}")
     private String TOPIC;
@@ -33,13 +39,14 @@ public class BookLibraryEventProducer {
         var key = event.getEventId();
         var value = objectMapper.writeValueAsString(event);
 
-        CompletableFuture<SendResult<Integer, String>> sendResultCompletableFuture = kafkaTemplate.send(buildProducerRecord(TOPIC, key, value));
+        ProducerRecord<Integer, String> record = buildProducerRecord(TOPIC, key, value);
+        CompletableFuture<SendResult<Integer, String>> sendResultCompletableFuture = kafkaTemplate.send(record);
         sendResultCompletableFuture
                 .whenCompleteAsync((result, throwable) -> {
                     if (throwable == null)
                         handleSuccess(result);
                     else
-                        handleException(throwable);
+                        handleException(throwable, record, event.getGuid());
                 });
 
 //                .whenComplete((result, throwable) -> {
@@ -53,20 +60,26 @@ public class BookLibraryEventProducer {
 
     public SendResult<Integer, String> sendBookEvent_Sync(BookLibraryEvent event) {
         SendResult<Integer, String> result = null;
+
         try {
             var key = event.getEventId();
             var value = objectMapper.writeValueAsString(event);
+            ProducerRecord<Integer, String> record = buildProducerRecord(TOPIC, key, value);
 
+            try {
 //            result = kafkaTemplate.sendDefault(key, value).get(1, TimeUnit.SECONDS);
 //            or
-
 //            result = kafkaTemplate.send(TOPIC, key, value).get();
 //            or
 
-            result = kafkaTemplate.send(buildProducerRecord(TOPIC, key, value)).get();
-
+                result = kafkaTemplate.send(record).get();
+            } catch (Exception e) {
+                handleException(e, record, event.getGuid());
+            } finally {
+                return result;
+            }
         } catch (Exception e) {
-            handleException(e);
+            log.error("Exception in sendBookEvent_Sync() before send event : {}", e);
         } finally {
             return result;
         }
@@ -77,8 +90,9 @@ public class BookLibraryEventProducer {
         return new ProducerRecord<>(topic, null, key, value, headers);
     }
 
-    private void handleException(Throwable throwable) {
+    private void handleException(Throwable throwable, ProducerRecord<Integer, String> producerRecord, String guid) {
         log.error("Error on send with exception ", throwable);
+        failureRecordService.save(producerRecord, throwable, guid, RETRY);
     }
 
     private void handleSuccess(SendResult<Integer, String> result) {
