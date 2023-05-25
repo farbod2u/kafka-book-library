@@ -23,6 +23,11 @@ keytool -keystore server.keystore.jks -alias localhost -validity 365 -genkey -ke
 CN=localhost, OU=localhost, O=localhost, L=Chennai, ST=TN, C=IN
 ```
 
+**To show the content of keystor file**
+
+```
+keytool -list -v -keystore server.keystore.jks
+```
 ## Generating CA
 
 - The below command will generate the ca cert(SSL cert) and private key. This is normally needed if we are self signing the request.
@@ -71,8 +76,10 @@ keytool -keystore client.truststore.jks -alias CARoot -import -file ca-cert
 ```
 
 ## Broker SSL Settings
-
+Add the following lines to server.properies files
 ```
+listeners = PLAINTEXT://localhost:<plaintext_port>, SSL://localhost:<ssl_port>
+
 ssl.keystore.location=<location>/server.keystore.jks
 ssl.keystore.password=password
 ssl.key.password=password
@@ -86,7 +93,7 @@ ssl.endpoint.identification.algorithm=
 ./kafka-topics.sh --create --topic test-topic -zookeeper localhost:2181 --replication-factor 1 --partitions 3
 ```
 
-- Create a file named **client-ssl.properties** and have the below properties configured in there.
+- Create a file named **client-ssl.properties** in the kafka bin directory and have the below properties configured in there.
 
 ```
 security.protocol=SSL
