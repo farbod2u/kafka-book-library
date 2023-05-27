@@ -1,6 +1,6 @@
 spring:
   profiles:
-    active: dev
+    active: dev_ssl
 
 ---
 spring:
@@ -33,8 +33,47 @@ spring:
   datasource:
     url: jdbc:h2:mem:bookLibDB
     driver-class-name: org.h2.Driver
+---
+spring:
+  config:
+    activate:
+      on-profile: dev_ssl
+  kafka:
+    template:
+      default-topic: book-lib-event
+    producer:
+      bootstrap-servers: localhost:9192, localhost:9193, localhost:9194
+      key-serializer: org.apache.kafka.common.serialization.IntegerSerializer
+      value-serializer: org.apache.kafka.common.serialization.StringSerializer
+      ssl:
+        trust-store-location: file:/home/saeed/IdeaProjects/kafka-book-library/ssl/client.truststore.jks
+        trust-store-password: sudnxp5698884
+        key-store-location: file:/home/saeed/IdeaProjects/kafka-book-library/ssl/client.keystore.jks
+        key-store-password: sudnxp5698884
+      properties:
+        acks: all
+        retries: 10
+        retry.backoff.ms: 1000
+        security:
+          protocol: SSL
+        ssl.endpoint.identification.algorithm:
 
-#---
+    admin:
+      properties:
+        bootstrap.servers: localhost:9092, localhost:9093, localhost:9094
+
+  jpa:
+    database: h2
+    database-platform: org.hibernate.dialect.H2Dialect
+    generate-ddl: true
+    show-sql: true
+  h2:
+    console:
+      enabled: true
+  datasource:
+    url: jdbc:h2:mem:bookLibDB
+    driver-class-name: org.h2.Driver
+
 #spring:
 #  config:
 #    activate:

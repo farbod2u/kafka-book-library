@@ -21,7 +21,7 @@ import java.util.concurrent.CompletableFuture;
 @Service
 @RequiredArgsConstructor
 @Slf4j
-@Profile("dev")
+@Profile("dev_ssl")
 public class BookLibraryEventProducer {
 
     public static final String RETRY = "RETRY";
