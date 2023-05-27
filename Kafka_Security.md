@@ -49,7 +49,7 @@ keytool -keystore server.keystore.jks -alias localhost -certreq -file cert-file
 - The below command takes care of signing the CSR and then it spits out a file **cert-signed**
 
 ```
-openssl x509 -req -CA ca-cert -CAkey ca-key -in cert-file -out cert-signed -days 365 -CAcreateserial -passin pass:password
+openssl x509 -req -CA ca-cert -CAkey ca-key -in cert-file -out cert-signed -days 365 -CAcreateserial -passin pass:sudnxp5698884
 ```
 
 - To view the content inside the file **cert-signed**, run the below command.
@@ -84,14 +84,9 @@ ssl.keystore.location=<location>/server.keystore.jks
 ssl.keystore.password=password
 ssl.key.password=password
 ssl.endpoint.identification.algorithm=
+
 ```
 # Accessing SSL Enabled Topics using Console Producers/Consumers
-
-- Create a topic
-
-```
-./kafka-topics.sh --create --topic test-topic -zookeeper localhost:2181 --replication-factor 1 --partitions 3
-```
 
 - Create a file named **client-ssl.properties** in the kafka bin directory and have the below properties configured in there.
 
@@ -101,6 +96,13 @@ ssl.truststore.location=<location>/client.truststore.jks
 ssl.truststore.password=password
 ssl.truststore.type=JKS
 ```
+
+- Create a topic
+
+```
+./kafka-topics.sh --create --topic test-topic --bootstrap-server localhost:9290 --command-config  client-ssl.properties --replication-factor 1 --partitions 3
+```
+
 
 ## Producing Messages to Secured Topic
 
@@ -147,6 +149,13 @@ ssl.truststore.location=<location>/server.truststore.jks
 ssl.truststore.password=password
 ssl.client.auth=required
 ```
+
+- Goto ssl directory an run following command:
+
+```
+cp server.keystore.jks client.keystore.jks
+```
+
 - Kafka Client should have the following the config in the **client-ssl.properties** file
 
 ```
