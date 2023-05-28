@@ -1,6 +1,6 @@
 spring:
   profiles:
-    active: dev
+    active: dev_ssl
 
 topics:
   retry: 'book-lib-event.RETRY'
@@ -45,7 +45,51 @@ spring:
     console:
       enabled: true
 ---
-
+spring:
+  config:
+    activate:
+      on-profile: dev_ssl
+  kafka:
+    template:
+      default-topic: book-lib-event
+    consumer:
+      bootstrap-servers: localhost:9192, localhost:9193, localhost:9194
+      key-deserializer: org.apache.kafka.common.serialization.IntegerDeserializer
+      value-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      group-id: library-events-listener-group
+      ssl:
+        trust-store-location: file:/home/saeed/IdeaProjects/kafka-book-library/ssl/client.truststore.jks
+        trust-store-password: sudnxp5698884
+        key-store-location: file:/home/saeed/IdeaProjects/kafka-book-library/ssl/client.keystore.jks
+        key-store-password: sudnxp5698884
+    producer:
+      bootstrap-servers: localhost:9192, localhost:9193, localhost:9194
+      key-serializer: org.apache.kafka.common.serialization.IntegerSerializer
+      value-serializer: org.apache.kafka.common.serialization.StringSerializer
+      ssl:
+        trust-store-location: file:/home/saeed/IdeaProjects/kafka-book-library/ssl/client.truststore.jks
+        trust-store-password: sudnxp5698884
+        key-store-location: file:/home/saeed/IdeaProjects/kafka-book-library/ssl/client.keystore.jks
+        key-store-password: sudnxp5698884
+    properties:
+      security:
+        protocol: SSL
+      ssl.endpoint.identification.algorithm:
+    listener:
+      ack-mode: manual
+      concurrency: 3 # suitable for non Kubernates environment
+  datasource:
+    url: jdbc:h2:mem:bookLibDB
+    driver-class-name: org.h2.Driver
+  jpa:
+    database: h2
+    database-platform: org.hibernate.dialect.H2Dialect
+    generate-ddl: true
+    show-sql: true
+  h2:
+    console:
+      enabled: true
+---
 spring:
   config:
     activate:

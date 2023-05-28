@@ -32,7 +32,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 @Configuration
-@Profile("dev")
+@Profile("dev_ssl")
 @EnableKafka
 @Slf4j
 public class BookLibraryConsumerConfig {
