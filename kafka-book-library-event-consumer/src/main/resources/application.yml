@@ -1,6 +1,6 @@
 spring:
   profiles:
-    active: dev_ssl
+    active: dev
 
 topics:
   retry: 'book-lib-event.RETRY'

@@ -32,7 +32,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 @Configuration
-@Profile("dev_ssl")
+@Profile("dev")
 @EnableKafka
 @Slf4j
 public class BookLibraryConsumerConfig {
@@ -130,9 +130,7 @@ public class BookLibraryConsumerConfig {
         notRetryableExceptionList.forEach(defaultErrorHandler::addNotRetryableExceptions);
         // or add defaultErrorHandler.addRetryableExceptions();
 
-        defaultErrorHandler.setRetryListeners((record, ex, deliveryAttempt) -> {
-            log.error("Retry Listener Exception : {} , deliveryAttempt : {}", ex.getCause(), deliveryAttempt);
-        });
+        defaultErrorHandler.setRetryListeners((record, ex, deliveryAttempt) -> log.error("Retry Listener Exception : {} , deliveryAttempt : {}", ex.getCause(), deliveryAttempt));
 
         return defaultErrorHandler;
     }

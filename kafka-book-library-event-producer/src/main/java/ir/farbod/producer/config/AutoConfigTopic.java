@@ -9,7 +9,7 @@ import org.springframework.context.annotation.Profile;
 import org.springframework.kafka.config.TopicBuilder;
 
 @Configuration
-@Profile("dev_ssl")
+@Profile("dev")
 @Slf4j
 public class AutoConfigTopic {
 
